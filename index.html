@@ -96,9 +96,10 @@
   nav.links a { color: var(--ink); text-decoration: none; font-weight: 700; font-size: 1.05rem; padding: 8px 0; }
   nav.links a:hover { color: var(--papaya); text-decoration: underline; }
   header.top .btn { min-height: 48px; padding: 0 20px; font-size: 1rem; }
+  header.top .theme { margin-left: 4px; }
   @media (max-width: 860px) {
     header.top .wrap { flex-wrap: wrap; gap: 0 16px; padding-bottom: 6px; }
-    header.top .btn { margin-left: auto; }
+    header.top .theme { margin-left: auto; }
     nav.links { order: 3; width: 100%; margin: 0; overflow-x: auto; gap: 18px; scrollbar-width: none; }
     nav.links a { white-space: nowrap; }
   }
@@ -106,6 +107,8 @@
     .brand { font-size: 1.05rem; gap: 8px; }
     .brand img { width: 36px; }
     header.top .btn { min-height: 44px; padding: 0 16px; font-size: .95rem; }
+    header.top .theme { width: 44px; height: 44px; }
+    header.top .btn { display: none; } /* the hero's Download button is right below */
   }
 
   /* ------------------------------------------------------------ hero */
@@ -258,7 +261,17 @@
   footer { border-top: 1px solid var(--line); padding: 32px 0 44px; color: var(--ink-soft); font-size: 1rem; }
   footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; justify-content: space-between; }
   footer p { margin: 0; }
-  .theme { background: none; border: 2px solid var(--line); color: var(--ink); border-radius: 999px; min-height: 44px; padding: 0 18px; font: 700 1rem var(--body); cursor: pointer; }
+  .theme {
+    display: inline-grid; place-items: center; flex: none;
+    width: 48px; height: 48px; padding: 0;
+    background: none; border: 2px solid var(--line); border-radius: 50%;
+    color: var(--ink); cursor: pointer;
+  }
+  .theme:hover { border-color: var(--ink); }
+  .theme svg { width: 24px; height: 24px; }
+  .theme .sun { display: none; }
+  .theme[aria-pressed="true"] .sun { display: block; }
+  .theme[aria-pressed="true"] .moon { display: none; }
 </style>
 </head>
 <body>
@@ -274,6 +287,10 @@
       <a href="#discounts">Seniors &amp; students</a>
       <a href="#toda">TODA &amp; LGU</a>
     </nav>
+    <button type="button" class="theme" id="theme" aria-pressed="false" aria-label="Dark mode">
+      <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </button>
     <a class="btn" href="#get">Get the app</a>
   </div>
 </header>
@@ -511,7 +528,6 @@
 <footer>
   <div class="wrap">
     <p>Papaya HatidGo: tricycle rides in General Tinio, Nueva Ecija. A BSIT project.</p>
-    <button type="button" class="theme" id="theme" aria-pressed="false">Dark mode</button>
   </div>
 </footer>
 
@@ -525,7 +541,8 @@
     if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
     const isDark = () => root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
     const label = () => {
-      button.textContent = isDark() ? 'Light mode' : 'Dark mode';
+      button.setAttribute('aria-label', isDark() ? 'Light mode' : 'Dark mode');
+      button.title = isDark() ? 'Light mode' : 'Dark mode';
       button.setAttribute('aria-pressed', String(isDark()));
     };
     label();
