@@ -272,6 +272,73 @@
   .theme .sun { display: none; }
   .theme[aria-pressed="true"] .sun { display: block; }
   .theme[aria-pressed="true"] .moon { display: none; }
+
+  /* ------------------------------------------------------------ the helper (chat, beta)
+     Answers common questions from this page, in the browser. No server, no account, no AI. */
+  footer { padding-bottom: 112px; } /* room so the Ask button never hides the footer text */
+  .ask {
+    position: fixed; right: 20px; bottom: 20px; z-index: 20;
+    display: inline-flex; align-items: center; gap: 10px;
+    min-height: 60px; padding: 0 24px 0 20px;
+    border: 2px solid var(--papaya); border-radius: 999px;
+    background: var(--papaya); color: var(--on-papaya);
+    font: 800 1.1rem/1 var(--body); cursor: pointer;
+    box-shadow: 0 12px 28px -12px rgba(28, 23, 20, .55);
+  }
+  .ask:hover { background: var(--papaya-pressed); border-color: var(--papaya-pressed); }
+  .ask svg { width: 26px; height: 26px; flex: none; }
+  .ask[aria-expanded="true"] { display: none; }
+
+  .chat {
+    position: fixed; right: 20px; bottom: 20px; z-index: 21;
+    width: min(400px, calc(100vw - 40px)); height: min(620px, calc(100dvh - 40px));
+    display: flex; flex-direction: column;
+    background: var(--ground); color: var(--ink);
+    border: 2px solid var(--line); border-radius: 22px; overflow: hidden;
+    box-shadow: 0 24px 56px -20px rgba(28, 23, 20, .55);
+  }
+  .chat[hidden] { display: none; }
+  .chat-head { display: flex; align-items: flex-start; gap: 12px; padding: 16px 14px 14px 20px; background: var(--papaya); color: var(--on-papaya); }
+  .chat-head h2 { font: 800 1.25rem/1.2 var(--body); letter-spacing: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .chat-head p { margin: 4px 0 0; font-size: .95rem; line-height: 1.4; opacity: .95; }
+  .beta { font: 800 .8rem/1 var(--body); padding: 5px 9px; border-radius: 999px; background: var(--on-papaya); color: var(--papaya); }
+  .chat-close {
+    margin-left: auto; flex: none; width: 44px; height: 44px; display: grid; place-items: center;
+    background: none; border: 2px solid currentColor; border-radius: 50%; color: inherit; cursor: pointer;
+  }
+  .chat-close svg { width: 20px; height: 20px; }
+  .chat-close:focus-visible { outline-color: var(--on-papaya); }
+
+  .chat-log { flex: 1; overflow-y: auto; padding: 18px 16px 8px; display: flex; flex-direction: column; gap: 12px; overscroll-behavior: contain; }
+  .msg { max-width: 88%; padding: 12px 16px; border-radius: 18px; font-size: 1.05rem; line-height: 1.5; }
+  .msg p { margin: 0; }
+  .msg p + p { margin-top: .5em; }
+  .msg.bot { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 6px; }
+  .msg.you { align-self: flex-end; background: var(--papaya); color: var(--on-papaya); border-bottom-right-radius: 6px; }
+  .msg a { font-weight: 700; }
+  .msg.typing { color: var(--ink-soft); letter-spacing: .2em; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; align-self: flex-start; max-width: 100%; }
+  .chips button {
+    min-height: 44px; padding: 8px 14px; border-radius: 999px;
+    background: var(--ground); color: var(--papaya); border: 2px solid var(--line);
+    font: 700 .98rem/1.2 var(--body); text-align: left; cursor: pointer;
+  }
+  .chips button:hover { border-color: var(--papaya); }
+
+  .chat-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); background: var(--ground); }
+  .chat-form input {
+    flex: 1; min-width: 0; min-height: 52px; padding: 0 16px;
+    border: 2px solid var(--line); border-radius: 999px; background: var(--ground); color: var(--ink);
+    font: 400 1.05rem var(--body);
+  }
+  .chat-form input:focus-visible { border-color: var(--focus); outline-offset: 1px; }
+  .chat-form .btn { min-height: 52px; padding: 0 20px; font-size: 1rem; }
+  .chat-note { margin: 0; padding: 0 16px 12px; font-size: .88rem; color: var(--ink-soft); background: var(--ground); max-width: none; }
+
+  @media (max-width: 480px) {
+    .ask { right: 14px; bottom: 14px; padding: 0 20px 0 16px; }
+    .chat { right: 0; bottom: 0; width: 100vw; height: min(88dvh, 100dvh); border-radius: 22px 22px 0 0; border-width: 2px 0 0; }
+  }
 </style>
 </head>
 <body>
@@ -531,6 +598,31 @@
   </div>
 </footer>
 
+<!-- ====================================================== the helper (beta) -->
+<button type="button" class="ask" id="ask" aria-expanded="false" aria-controls="chat">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8.5 9.5h7M8.5 12.5h4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+  Ask a question
+</button>
+
+<section class="chat" id="chat" role="dialog" aria-modal="false" aria-labelledby="chat-h" hidden>
+  <div class="chat-head">
+    <div>
+      <h2 id="chat-h">Ask HatidGo <span class="beta">Beta</span></h2>
+      <p>Still being built. It answers common questions about the app.</p>
+    </div>
+    <button type="button" class="chat-close" id="chat-close" aria-label="Close the chat">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="chat-log" id="chat-log" aria-live="polite"></div>
+  <form class="chat-form" id="chat-form" autocomplete="off">
+    <label for="chat-input" class="skip">Your question</label>
+    <input id="chat-input" name="q" type="text" maxlength="300" placeholder="Type your question" enterkeyhint="send">
+    <button class="btn" type="submit">Send</button>
+  </form>
+  <p class="chat-note">English or Taglish. It can't see your account or book rides.</p>
+</section>
+
 <script>
   // Light / dark: follows the phone unless the visitor picks one (remembered on this device only).
   (function () {
@@ -550,6 +642,228 @@
       root.dataset.theme = isDark() ? 'light' : 'dark';
       try { localStorage.setItem('hg-theme', root.dataset.theme); } catch (e) { /* not remembered */ }
       label();
+    });
+  })();
+
+  // The helper (beta). Matches the question's words against a fixed list of answers taken from this page.
+  // Nothing leaves the browser: no server, no AI, nothing stored.
+  (function () {
+    const APK = 'https://github.com/Dosss42/papaya-hatidgo-manual/releases/latest/download/papaya-hatidgo.apk';
+    const MANUAL = 'https://dosss42.github.io/papaya-hatidgo-manual/';
+
+    // Each answer: words that point to it (English and Taglish), the reply, an optional link, and follow-up questions.
+    const ANSWERS = [
+      { id: 'hello', weight: 0.5, words: ['hi', 'hello', 'hey', 'kumusta', 'kamusta', 'good morning', 'good afternoon', 'good evening', 'magandang'],
+        say: ['Hello! Ask me about fares, booking a ride, discounts, or driving with Papaya HatidGo.'],
+        next: ['How much is a ride?', 'How do I book?', 'How do I become a driver?'] },
+      { id: 'thanks', weight: 0.5, words: ['thanks', 'thank you', 'salamat', 'ty'],
+        say: ['You’re welcome! Anything else you want to know?'],
+        next: ['Download the app', 'Senior or student discount'] },
+      { id: 'area', words: ['where', 'saan', 'area', 'location', 'lugar', 'general tinio', 'papaya', 'nueva ecija', 'barangay', 'outside', 'service area'],
+        say: ['Papaya HatidGo works in General Tinio (Papaya), Nueva Ecija.', 'The app tells you if a pickup or destination is outside the service area.'],
+        next: ['How much is a ride?', 'How do I book?'] },
+      { id: 'fare', words: ['fare', 'price', 'presyo', 'magkano', 'how much', 'cost', 'bayad', 'taripa', 'rate', 'pamasahe', 'singil'],
+        say: ['You pay the fare, which goes to the driver, plus a 5% service fee. The total is rounded down, so you never need coins.', 'Example: a ₱52.20 fare plus the fee comes to ₱54. The price shows in the app before you book.'],
+        link: ['#fare', 'See the fare board'],
+        next: ['Why is there a service fee?', 'Senior or student discount', 'Are the first rides free?'] },
+      { id: 'fee', words: ['service fee', 'fee', '5%', 'why fee', 'subscription', 'monthly'],
+        say: ['There is no monthly subscription. A small service fee is added only when you ride. It pays for the server, the maps, permits and improving the app.', 'Your first 3 rides have no service fee, and approved Senior, PWD and student IDs ride without it.'],
+        next: ['Are the first rides free?', 'Senior or student discount'] },
+      { id: 'first', words: ['first ride', 'first 3', 'free ride', 'libre', 'new passenger', 'bago'],
+        say: ['Yes: your first 3 rides have no service fee. You pay only the fare.', 'You can earn more free rides by inviting friends.'],
+        next: ['How do I invite friends?', 'How do I book?'] },
+      { id: 'book', weight: 0.9, words: ['book', 'booking', 'mag-book', 'magbook', 'how to ride', 'paano', 'sumakay', 'sakay', 'ride', 'request', 'pickup', 'pick up'],
+        say: ['1. Set your pickup on the map and add a landmark, like “blue gate”.', '2. Choose One-way or Balikan and see the fare.', '3. A nearby driver accepts. You see their name, photo, body number and plate.', '4. Pay in cash or in the app, then rate the ride.'],
+        link: ['#ride', 'See the four steps'],
+        next: ['What is Balikan?', 'How do I pay?', 'Can I cancel?'] },
+      { id: 'balikan', words: ['balikan', 'round trip', 'return trip', 'balik', 'wait for me', 'hintay'],
+        say: ['Balikan means the driver waits and brings you back. Pick it instead of One-way when you book; the fare for both legs shows before you book.'],
+        next: ['How much is a ride?', 'How do I book?'] },
+      { id: 'cancel', words: ['cancel', 'kansel', 'cancellation', 'hindi na', 'ayaw ko na'],
+        say: ['You can cancel at no cost while the app is still looking for a driver.', 'Once the driver is on the way, Cancel comes back only if they still haven’t arrived after 10 minutes.'],
+        next: ['How do I pay?', 'Report a problem'] },
+      { id: 'pay', words: ['pay', 'payment', 'gcash', 'maya', 'card', 'cash', 'magbayad', 'paymaya', 'online payment', 'payment safe', 'xendit'],
+        say: ['Pay the driver in cash, or pay in the app with GCash, Maya or a card after the ride.', 'In-app payments go through Xendit, a licensed payment company. Papaya HatidGo never sees your card number or GCash PIN.'],
+        next: ['How much is a ride?', 'Can I cancel?'] },
+      { id: 'discount', words: ['senior', 'pwd', 'student', 'estudyante', 'discount', 'disability', 'school id', 'id', 'lolo', 'lola', 'matanda'],
+        say: ['Senior citizens, PWD and students with an approved ID pay no service fee on their share.', 'Send a photo of your ID once in the app (students also send proof of enrollment). After the office approves it, show the ID to the driver at pickup.'],
+        link: ['#discounts', 'Read more'],
+        next: ['Can I book for someone else?', 'How much is a ride?'] },
+      { id: 'someone', words: ['someone else', 'for my', 'family', 'pamilya', 'no phone', 'walang phone', 'walang cellphone', 'no load', 'walang load', 'qr', 'kontrata'],
+        say: ['Yes, you can book for someone else: enter the rider’s name and number so the driver knows whom to pick up. A discount follows the person riding, not the phone.', 'Already at a tricycle? Show the driver a QR code from a friend’s app and ride at the same fare.'],
+        next: ['Senior or student discount', 'How do I book?'] },
+      { id: 'invite', words: ['invite', 'refer', 'referral', 'points', 'imbita', 'code'],
+        say: ['When someone you invited finishes their first ride, you earn points. Points become free rides (no service fee). Find your invite code in the app under Refer & earn.'],
+        next: ['Are the first rides free?', 'Download the app'] },
+      { id: 'download', words: ['download', 'install', 'apk', 'android', 'i-download', 'saan makukuha', 'get the app', 'play store'],
+        say: ['The app is for Android 7.0 or newer. Download the app file and install it; the user manual shows each step with a QR code to scan.'],
+        link: [APK, 'Download for Android'],
+        next: ['Is there an iPhone app?', 'Open the user manual'] },
+      { id: 'iphone', words: ['iphone', 'ios', 'apple', 'ipad'],
+        say: ['Not yet. Papaya HatidGo is for Android phones for now.'],
+        next: ['Download the app'] },
+      { id: 'manual', words: ['manual', 'guide', 'instructions', 'tutorial', 'help me install'],
+        say: ['The user manual explains installing the app and every screen, for passengers and drivers.'],
+        link: [MANUAL, 'Open the user manual'],
+        next: ['Download the app', 'How do I book?'] },
+      { id: 'driver', weight: 0.95, words: ['become a driver', 'be a driver', 'maging driver', 'apply', 'requirements', 'requirement', 'papers', 'license', 'lisensya', 'franchise', 'mtop', 'or cr', 'orcr', 'clearance', 'register', 'sign up as driver', 'driver'],
+        say: ['Sign up in the app as a driver, add your tricycle, and send photos of your driver’s license, OR/CR, franchise (MTOP) and a clearance.', 'The Papaya HatidGo office checks them. Once approved, you can go online and take requests.'],
+        link: ['#drivers', 'For tricycle drivers'],
+        next: ['How much do drivers keep?', 'Download the app'] },
+      { id: 'earn', weight: 1.2, words: ['commission', 'drivers keep', 'driver keep', 'drivers earn', 'driver earn', 'how much do drivers', 'magkano kita', 'earn', 'earnings', 'kita', 'kikitain', 'income', 'tier', 'bonus', 'cash out', 'payout', 'withdraw', 'owe', 'utang', 'settle'],
+        say: ['Drivers keep almost all of every fare. Papaya HatidGo takes 5% only when you finish a ride, and your first week is commission-free.', 'More rides a week lower it: 20+ rides 4%, 30+ rides 3%, 40+ rides 2% plus a ₱50 bonus. It also stops at ₱30 a day.', 'Rides paid in the app become credit you can cash out to GCash or Maya.'],
+        link: ['#drivers', 'See the driver tiers'],
+        next: ['How do I become a driver?', 'Fair turns for drivers'] },
+      { id: 'fair', words: ['fair', 'turn', 'pila', 'queue', 'who gets', 'nearest'],
+        say: ['When drivers are about equally near, the one who has waited longest gets the next request. Drivers also see every request near them and can accept or skip.'],
+        next: ['How much do drivers keep?'] },
+      { id: 'safety', words: ['safe', 'safety', 'ligtas', 'verified', 'trust', 'driver photo', 'plate', 'body number', 'rating', 'ratings'],
+        say: ['Every driver’s papers are checked by the office before their first passenger. You see the driver’s photo, body number, plate and tricycle color before it arrives.', 'Low ratings send a driver to an office review, with the reason the passenger gave.'],
+        link: ['#safety', 'Read more'],
+        next: ['Report a problem', 'How do I pay?'] },
+      { id: 'report', words: ['report', 'complaint', 'reklamo', 'problem', 'problema', 'lost', 'naiwan', 'contact', 'office', 'admin', 'human', 'tao', 'customer service'],
+        say: ['Use Report a problem from the ride itself in the app; the Papaya HatidGo office reviews every report.', 'This helper can’t contact the office for you yet.'],
+        next: ['Is it safe?', 'How do I book?'] },
+      { id: 'motor', words: ['motorcycle', 'motor', 'habal', 'habal-habal', 'single'],
+        say: ['Motorcycle rides are under maintenance and coming soon. For now, Papaya HatidGo books tricycles.'],
+        next: ['How much is a ride?'] },
+      { id: 'toda', words: ['toda', 'lgu', 'terminal', 'munisipyo', 'municipal', 'mayor', 'government', 'legal'],
+        say: ['The app supports the TODA terminal; it does not replace it. Only franchised tricycles with approved papers can go online, and fares follow the rates set by the office.', 'The office can print reports on rides, drivers, users and earnings.'],
+        link: ['#toda', 'Working with the TODA and the LGU'],
+        next: ['How do I become a driver?'] },
+      { id: 'language', words: ['tagalog', 'taglish', 'filipino', 'language', 'wika', 'english'],
+        say: ['The app works in English or Taglish. You can switch the language in the app’s Account tab.'],
+        next: ['Download the app'] }
+    ];
+    // Suggested questions point to an answer directly, so a tap always gets the right one.
+    const CHIP = {
+      'How much is a ride?': 'fare', 'How do I book?': 'book', 'How do I become a driver?': 'driver',
+      'Senior or student discount': 'discount', 'Download the app': 'download', 'Why is there a service fee?': 'fee',
+      'Are the first rides free?': 'first', 'What is Balikan?': 'balikan', 'How do I pay?': 'pay', 'Can I cancel?': 'cancel',
+      'Can I book for someone else?': 'someone', 'How do I invite friends?': 'invite', 'Is there an iPhone app?': 'iphone',
+      'Open the user manual': 'manual', 'How much do drivers keep?': 'earn', 'Fair turns for drivers': 'fair',
+      'Report a problem': 'report', 'Is it safe?': 'safety'
+    };
+    const START = ['How much is a ride?', 'How do I book?', 'Senior or student discount', 'How do I become a driver?', 'Download the app'];
+
+    const norm = s => ' ' + s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9%\- ]+/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
+
+    function best(question) {
+      const text = norm(question);
+      const words = text.trim().split(' ');
+      let top = null, topScore = 0;
+      for (const a of ANSWERS) {
+        let score = 0;
+        for (const w of a.words) {
+          const k = norm(w).trim();
+          if (k.includes(' ')) { if (text.includes(' ' + k + ' ')) score += 2; }
+          else if (words.some(x => x === k || (k.length >= 4 && x.startsWith(k)))) score += 1;
+        }
+        score *= a.weight || 1;
+        if (score > topScore) { top = a; topScore = score; }
+      }
+      return top;
+    }
+
+    const ask = document.getElementById('ask');
+    const chat = document.getElementById('chat');
+    const log = document.getElementById('chat-log');
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('chat-input');
+    const closeBtn = document.getElementById('chat-close');
+    const calm = matchMedia('(prefers-reduced-motion: reduce)');
+    let started = false;
+
+    const scrollDown = () => { log.scrollTop = log.scrollHeight; };
+
+    function bubble(who, lines, link) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + who;
+      for (const line of lines) {
+        const p = document.createElement('p');
+        p.textContent = line;
+        div.appendChild(p);
+      }
+      if (link) {
+        const p = document.createElement('p');
+        const a = document.createElement('a');
+        a.href = link[0];
+        a.textContent = link[1];
+        if (link[0].startsWith('http')) { a.target = '_blank'; a.rel = 'noopener'; }
+        else a.addEventListener('click', () => { if (matchMedia('(max-width: 480px)').matches) close(); });
+        p.appendChild(a);
+        div.appendChild(p);
+      }
+      log.appendChild(div);
+      scrollDown();
+    }
+
+    function chips(list) {
+      log.querySelectorAll('.chips').forEach(c => c.remove()); // only the newest suggestions stay
+      const row = document.createElement('div');
+      row.className = 'chips';
+      for (const q of list) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = q;
+        b.addEventListener('click', () => send(q, CHIP[q]));
+        row.appendChild(b);
+      }
+      log.appendChild(row);
+      scrollDown();
+    }
+
+    function reply(answer) {
+      if (answer) {
+        bubble('bot', answer.say, answer.link);
+        if (answer.next) chips(answer.next);
+      } else {
+        bubble('bot', ['I don’t know that one yet; I’m still learning. Try one of these, or read the user manual.'], [MANUAL, 'Open the user manual']);
+        chips(START);
+      }
+    }
+
+    function send(text, id) {
+      text = text.trim().slice(0, 300);
+      if (!text) return;
+      log.querySelectorAll('.chips').forEach(c => c.remove());
+      bubble('you', [text]);
+      const answer = id ? ANSWERS.find(a => a.id === id) : best(text);
+      if (calm.matches) { reply(answer); return; }
+      const dots = document.createElement('div');
+      dots.className = 'msg bot typing';
+      dots.textContent = '…';
+      dots.setAttribute('aria-hidden', 'true');
+      log.appendChild(dots);
+      scrollDown();
+      setTimeout(() => { dots.remove(); reply(answer); }, 450);
+    }
+
+    function open() {
+      chat.hidden = false;
+      ask.setAttribute('aria-expanded', 'true');
+      if (!started) {
+        started = true;
+        bubble('bot', ['Hi! I’m the Papaya HatidGo helper. I’m still being built, but I can answer common questions. Tap one below or type your own.']);
+        chips(START);
+      }
+      input.focus();
+    }
+    function close() {
+      chat.hidden = true;
+      ask.setAttribute('aria-expanded', 'false');
+      ask.focus();
+    }
+
+    ask.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    chat.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const q = input.value;
+      input.value = '';
+      send(q);
     });
   })();
 </script>
