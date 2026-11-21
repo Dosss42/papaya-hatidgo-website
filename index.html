@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Papaya HatidGo</title>
+<meta name="description" content="Tricycle rides in General Tinio (Papaya), Nueva Ecija, booked from your phone. No subscription: a small fee only when you ride. Seniors, PWD and students ride without the fee.">
+<meta name="theme-color" content="#c2410c">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700;800&family=Big+Shoulders+Display:wght@800;900&display=swap" rel="stylesheet">
+<style>
+  /* ------------------------------------------------------------ tokens
+     The app's own brand (papaya, leaf, ink). One extra color, the painted-sign yellow, is used
+     only on the fare board: the one loud thing on the page. */
+  :root {
+    --ground: #ffffff;
+    --surface: #f7f3ee;
+    --line: #ded5cb;
+    --papaya: #c2410c;
+    --papaya-pressed: #9a3412;
+    --tint: #fff1e6;
+    --leaf: #2e7d32;
+    --leaf-tint: #e8f5e9;
+    --ink: #1c1714;
+    --ink-soft: #574b42;
+    --sign: #ffd23f;
+    --sign-ink: #1c1714;
+    --on-papaya: #ffffff;
+    --focus: #1d4ed8;
+    --radius: 16px;
+    --display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+    --body: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #171310; --surface: #221c18; --line: #3b322c; --papaya: #ff8a4c; --papaya-pressed: #ffa774;
+      --tint: #2d1f16; --leaf: #7bc47f; --leaf-tint: #1b2a1c; --ink: #f6f0ea; --ink-soft: #c9bdb3;
+      --on-papaya: #1c1714; --focus: #93c5fd; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #171310; --surface: #221c18; --line: #3b322c; --papaya: #ff8a4c; --papaya-pressed: #ffa774;
+    --tint: #2d1f16; --leaf: #7bc47f; --leaf-tint: #1b2a1c; --ink: #f6f0ea; --ink-soft: #c9bdb3;
+    --on-papaya: #1c1714; --focus: #93c5fd; color-scheme: dark;
+  }
+
+  /* ------------------------------------------------------------ base: big, plain, high contrast */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 1.1875rem/1.6 var(--body); /* 19px: seniors read this without zooming */
+  }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: var(--papaya); text-underline-offset: 3px; }
+  a:hover { color: var(--papaya-pressed); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+  .wrap { width: min(1120px, 100%); margin: 0 auto; padding: 0 20px; }
+  .skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: var(--ground); padding: 10px 16px; border-radius: 8px; z-index: 10; }
+  .skip:focus { left: 8px; }
+
+  h1, h2 { font-family: var(--display); font-weight: 900; line-height: .98; letter-spacing: .005em; margin: 0; }
+  h1 { font-size: clamp(3.2rem, 11vw, 6.4rem); }
+  h2 { font-size: clamp(2.5rem, 7vw, 4rem); }
+  h3 { font-size: 1.35rem; line-height: 1.25; margin: 0 0 .35em; }
+  p { margin: 0 0 1em; max-width: 62ch; }
+  .lead { font-size: 1.3rem; color: var(--ink-soft); }
+  h2 + .lead { margin-top: 18px; }
+
+  /* ------------------------------------------------------------ buttons: 56px tall, words not arrows */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 56px; padding: 0 26px;
+    border-radius: 999px; border: 2px solid var(--papaya);
+    font: 800 1.125rem/1 var(--body); text-decoration: none;
+    background: var(--papaya); color: var(--on-papaya);
+  }
+  .btn:hover { background: var(--papaya-pressed); border-color: var(--papaya-pressed); color: var(--on-papaya); }
+  .btn.quiet { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.quiet:hover { border-color: var(--ink); color: var(--ink); }
+  .btn svg { width: 22px; height: 22px; flex: none; }
+
+  /* ------------------------------------------------------------ header */
+  header.top { border-bottom: 1px solid var(--line); background: var(--ground); position: sticky; top: 0; z-index: 5; }
+  header.top .wrap { display: flex; align-items: center; gap: 20px; min-height: 72px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 1.2rem; }
+  .brand img { width: 44px; height: auto; }
+  .brand b { color: var(--papaya); }
+  nav.links { display: flex; gap: 22px; margin-left: auto; }
+  nav.links a { color: var(--ink); text-decoration: none; font-weight: 700; font-size: 1.05rem; padding: 8px 0; }
+  nav.links a:hover { color: var(--papaya); text-decoration: underline; }
+  header.top .btn { min-height: 48px; padding: 0 20px; font-size: 1rem; }
+  @media (max-width: 860px) {
+    header.top .wrap { flex-wrap: wrap; gap: 0 16px; padding-bottom: 6px; }
+    header.top .btn { margin-left: auto; }
+    nav.links { order: 3; width: 100%; margin: 0; overflow-x: auto; gap: 18px; scrollbar-width: none; }
+    nav.links a { white-space: nowrap; }
+  }
+  @media (max-width: 480px) {
+    .brand { font-size: 1.05rem; gap: 8px; }
+    .brand img { width: 36px; }
+    header.top .btn { min-height: 44px; padding: 0 16px; font-size: .95rem; }
+  }
+
+  /* ------------------------------------------------------------ hero */
+  .hero { padding: 56px 0 40px; overflow: hidden; }
+  .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 48px; align-items: center; }
+  .hero h1 { margin-bottom: 22px; }
+  .hero .lead { margin-bottom: 28px; }
+  .hero .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 26px; }
+  .facts { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+  .facts li { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 1rem; }
+  .hero .phone { justify-self: center; transform: rotate(2.5deg); }
+  @media (max-width: 860px) {
+    .hero { padding-top: 36px; }
+    .hero .wrap { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+    .hero .phone { transform: none; }
+  }
+
+  /* A phone frame around the real screenshots. */
+  .phone {
+    width: min(300px, 78vw);
+    border: 10px solid var(--ink);
+    border-radius: 34px;
+    overflow: hidden;
+    background: var(--ink);
+    box-shadow: 0 24px 48px -24px rgba(28, 23, 20, .45);
+  }
+  :root[data-theme="dark"] .phone { border-color: #3b322c; background: #3b322c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .phone { border-color: #3b322c; background: #3b322c; } }
+  .phone img { width: 100%; aspect-ratio: 390 / 844; object-fit: cover; }
+
+  /* ------------------------------------------------------------ sections */
+  section.band { padding: 84px 0; }
+  section.band.alt { background: var(--surface); }
+  .head { margin-bottom: 40px; }
+  .head h2 { margin-bottom: 16px; }
+  @media (max-width: 860px) { section.band { padding: 60px 0; } }
+
+  /* How a ride works: a real sequence, so it is numbered. */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; counter-reset: step; }
+  .steps li { counter-increment: step; }
+  .steps .phone { width: 100%; border-width: 8px; border-radius: 26px; margin-bottom: 18px; }
+  .steps h3::before {
+    content: counter(step);
+    display: inline-grid; place-items: center;
+    width: 40px; height: 40px; margin-right: 10px; vertical-align: -6px;
+    border-radius: 50%; background: var(--papaya); color: var(--on-papaya);
+    font: 900 1.4rem/1 var(--display);
+  }
+  .steps p { font-size: 1.05rem; color: var(--ink-soft); }
+  @media (max-width: 980px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) {
+    .steps { grid-template-columns: minmax(0, 1fr); }
+    .steps .phone { width: min(260px, 72vw); }
+  }
+
+  /* ------------------------------------------------------------ the fare board (the loud part)
+     Like the taripa painted at a TODA terminal: thick frame, painted yellow, big numbers. */
+  .fare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+  .board {
+    background: var(--sign); color: var(--sign-ink);
+    border: 6px solid var(--sign-ink); border-radius: 10px;
+    box-shadow: 10px 10px 0 var(--papaya);
+    padding: 26px 26px 22px;
+    transform: rotate(-1deg);
+  }
+  .board h3 { font: 900 2.4rem/1 var(--display); margin: 0 0 4px; }
+  .board .sub { font-weight: 700; margin: 0 0 18px; }
+  .board table { width: 100%; border-collapse: collapse; font-size: 1.15rem; }
+  .board th, .board td { padding: 10px 0; text-align: left; border-bottom: 3px dashed rgba(28, 23, 20, .35); }
+  .board th { font-weight: 700; }
+  .board td { text-align: right; font: 900 1.9rem/1 var(--display); white-space: nowrap; }
+  .board tr.total th, .board tr.total td { border-bottom: 0; padding-top: 16px; }
+  .board tr.total th { font-size: 1.3rem; font-weight: 800; }
+  .board tr.total td { font-size: 3.2rem; }
+  .board .foot { margin: 14px 0 0; font-weight: 700; font-size: 1rem; }
+  .board .foot + .foot { margin-top: 4px; }
+  .fare ul { padding-left: 1.2em; margin: 0 0 1em; }
+  .fare li { margin-bottom: .55em; }
+  .fare li strong { color: var(--ink); }
+  @media (max-width: 860px) {
+    .fare { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+    .board { transform: none; box-shadow: 6px 6px 0 var(--papaya); padding: 20px 18px; }
+    .board td { font-size: 1.6rem; }
+    .board tr.total td { font-size: 2.6rem; }
+  }
+
+  /* ------------------------------------------------------------ two-column rows with a phone */
+  .split { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 56px; align-items: center; }
+  .split.flip { grid-template-columns: auto minmax(0, 1fr); }
+  .split.flip .shots { order: -1; }
+  .shots { display: flex; gap: 18px; }
+  .shots .phone { width: 240px; border-width: 8px; border-radius: 26px; }
+  .shots .phone + .phone { margin-top: 48px; }
+  @media (max-width: 980px) {
+    .split, .split.flip { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    .split.flip .shots { order: 0; }
+    .shots .phone { width: min(220px, 42vw); }
+    .shots .phone + .phone { margin-top: 32px; }
+  }
+
+  /* Plain lists of what's true, with a leaf check (a fact, not a decoration). */
+  .checks { list-style: none; padding: 0; margin: 0 0 1em; }
+  .checks li { position: relative; padding-left: 40px; margin-bottom: 16px; max-width: 60ch; }
+  .checks li::before {
+    content: ""; position: absolute; left: 0; top: 4px; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--leaf-tint) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%232e7d32' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 18px no-repeat;
+  }
+  .checks strong { display: block; }
+
+  /* The driver's numbers: what they keep, the cap, the tiers. */
+  .tiers { border: 2px solid var(--line); border-radius: var(--radius); overflow: hidden; margin: 8px 0 20px; max-width: 520px; }
+  .tiers table { width: 100%; border-collapse: collapse; font-size: 1.05rem; }
+  .tiers th, .tiers td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+  .tiers thead th { background: var(--surface); font-weight: 800; }
+  .tiers tr:last-child td { border-bottom: 0; }
+  .tiers td:last-child { font-weight: 800; }
+  .tiers caption { caption-side: top; text-align: left; padding: 14px 16px 10px; font-weight: 800; background: var(--surface); }
+
+  /* Who it is for: three columns of plain prose, no cards. */
+  .people { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; }
+  .people h3 { padding-top: 14px; border-top: 4px solid var(--papaya); }
+  .people p { font-size: 1.08rem; color: var(--ink-soft); }
+  @media (max-width: 860px) { .people { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+
+  /* TODA and LGU */
+  .partner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; }
+  .partner .checks li { margin-bottom: 14px; }
+  @media (max-width: 860px) { .partner { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
+
+  /* Download */
+  .get { background: var(--papaya); color: var(--on-papaya); }
+  .get h2, .get p { color: var(--on-papaya); }
+  .get .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 40px; align-items: center; }
+  .get .btn { background: var(--on-papaya); color: var(--papaya); border-color: var(--on-papaya); }
+  .get .btn:hover { background: transparent; color: var(--on-papaya); }
+  .get .btn.quiet { background: transparent; color: var(--on-papaya); border-color: currentColor; }
+  .get .btn.quiet:hover { background: var(--on-papaya); color: var(--papaya); }
+  .get .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .get small { display: block; margin-top: 14px; font-size: 1rem; opacity: .92; }
+  @media (max-width: 860px) { .get .wrap { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Questions */
+  details { border-bottom: 1px solid var(--line); max-width: 820px; }
+  summary { cursor: pointer; list-style: none; padding: 20px 44px 20px 0; position: relative; font-weight: 800; font-size: 1.2rem; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; position: absolute; right: 6px; top: 12px; font: 900 2rem/1 var(--display); color: var(--papaya); }
+  details[open] summary::after { content: "−"; }
+  details p { color: var(--ink-soft); margin-bottom: 20px; }
+
+  footer { border-top: 1px solid var(--line); padding: 32px 0 44px; color: var(--ink-soft); font-size: 1rem; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; justify-content: space-between; }
+  footer p { margin: 0; }
+  .theme { background: none; border: 2px solid var(--line); color: var(--ink); border-radius: 999px; min-height: 44px; padding: 0 18px; font: 700 1rem var(--body); cursor: pointer; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="img/favicon.svg" alt="" width="44" height="36"><span>Papaya <b>HatidGo</b></span></a>
+    <nav class="links" aria-label="Sections">
+      <a href="#ride">How it works</a>
+      <a href="#fare">Fares</a>
+      <a href="#drivers">Drivers</a>
+      <a href="#discounts">Seniors &amp; students</a>
+      <a href="#toda">TODA &amp; LGU</a>
+    </nav>
+    <a class="btn" href="#get">Get the app</a>
+  </div>
+</header>
+
+<main id="main">
+  <!-- ====================================================== hero -->
+  <section class="hero" id="top">
+    <div class="wrap">
+      <div>
+        <h1>Your tricycle, booked from your phone.</h1>
+        <p class="lead">Papaya HatidGo connects passengers in General Tinio, Nueva Ecija, with verified tricycle drivers nearby. See the fare before you ride, follow your driver on the map, and pay in cash or in the app.</p>
+        <div class="actions">
+          <a class="btn" href="https://github.com/Dosss42/papaya-hatidgo-manual/releases/latest/download/papaya-hatidgo.apk">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Download for Android
+          </a>
+          <a class="btn quiet" href="#ride">See how it works</a>
+        </div>
+        <ul class="facts" aria-label="At a glance">
+          <li>No subscription</li>
+          <li>English or Taglish</li>
+          <li>Seniors ride without the fee</li>
+        </ul>
+      </div>
+      <div class="phone"><img src="img/ride-arriving.webp" alt="The app showing that the driver Juan is on the way, with his tricycle color, body number, plate number and rating." width="390" height="844"></div>
+    </div>
+  </section>
+
+  <!-- ====================================================== how a ride works -->
+  <section class="band alt" id="ride" aria-labelledby="ride-h">
+    <div class="wrap">
+      <div class="head">
+        <h2 id="ride-h">A ride in four steps</h2>
+        <p class="lead">The same trip you know, without waiting at the terminal or guessing the fare.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <div class="phone"><img src="img/book-pickup.webp" alt="Step 1: the map at your location with the button Pick me up here." loading="lazy" width="390" height="844"></div>
+          <h3>Set your pickup</h3>
+          <p>The map starts where you are. Add a landmark like <em>blue gate</em> so the driver finds you.</p>
+        </li>
+        <li>
+          <div class="phone"><img src="img/book-choose.webp" alt="Step 3: One-way and Balikan with their fares." loading="lazy" width="390" height="844"></div>
+          <h3>See the fare</h3>
+          <p>Pick One-way or Balikan (the driver waits and brings you back). The price shows before you book.</p>
+        </li>
+        <li>
+          <div class="phone"><img src="img/ride-searching.webp" alt="Looking for a driver, with the pickup, destination and fare." loading="lazy" width="390" height="844"></div>
+          <h3>A driver accepts</h3>
+          <p>You see their name, photo, body number and plate, and where they are. Call or chat in the app.</p>
+        </li>
+        <li>
+          <div class="phone"><img src="img/ride-done.webp" alt="You've arrived: the amount to pay and five stars to rate the ride." loading="lazy" width="390" height="844"></div>
+          <h3>Pay and rate</h3>
+          <p>Pay the driver in cash, or with GCash, Maya or a card in the app. Then rate the ride.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ====================================================== the fare board -->
+  <section class="band" id="fare" aria-labelledby="fare-h">
+    <div class="wrap fare">
+      <div>
+        <h2 id="fare-h">You pay only when you ride</h2>
+        <p class="lead">No monthly plan. Each ride is the fare, which goes to the driver, plus a small service fee that keeps the app running.</p>
+        <ul>
+          <li><strong>Rounded down.</strong> The total drops the centavos, so you never need coins.</li>
+          <li><strong>Your first 3 rides</strong> have no service fee.</li>
+          <li><strong>Senior citizens, PWD and students</strong> with an approved ID pay no service fee on their share.</li>
+          <li><strong>Invite friends:</strong> when someone you invited finishes their first ride, you earn points for free rides.</li>
+          <li><strong>Nothing to pay</strong> when you cancel early or no driver is found.</li>
+        </ul>
+        <p>The fare follows the rates set by the Papaya HatidGo office, measured along the real roads.</p>
+      </div>
+
+      <div class="board" role="group" aria-labelledby="board-h">
+        <h3 id="board-h">Taripa</h3>
+        <p class="sub">A one-way ride across town, as an example</p>
+        <table>
+          <tbody>
+            <tr><th scope="row">Fare (to the driver)</th><td>₱52.20</td></tr>
+            <tr><th scope="row">Service fee, 5%</th><td>₱1.80</td></tr>
+            <tr class="total"><th scope="row">You pay</th><td>₱54</td></tr>
+          </tbody>
+        </table>
+        <p class="foot">Senior, PWD or student riding alone: ₱52.20.</p>
+        <p class="foot">First 3 rides: ₱52.20.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== drivers -->
+  <section class="band alt" id="drivers" aria-labelledby="drv-h">
+    <div class="wrap split">
+      <div>
+        <h2 id="drv-h">For tricycle drivers</h2>
+        <p class="lead">More passengers between terminal trips, and you keep almost all of every fare.</p>
+        <ul class="checks">
+          <li><strong>No monthly fee.</strong> Papaya HatidGo takes 5% of a fare only when you finish a ride. Your first week is commission-free.</li>
+          <li><strong>You choose.</strong> See every request near you with its fare and distance, then accept or skip.</li>
+          <li><strong>Fair turns.</strong> When drivers are about equally near, the one who has waited longest gets the next request.</li>
+          <li><strong>Pay after you earn.</strong> Keep the cash; settle the fees at the office or in the app. Rides paid in the app become credit you can cash out to GCash or Maya.</li>
+        </ul>
+        <div class="tiers">
+          <table>
+            <caption>The more you drive, the less you pay</caption>
+            <thead><tr><th scope="col">Rides this week</th><th scope="col">Commission</th></tr></thead>
+            <tbody>
+              <tr><td>Up to 19</td><td>5%</td></tr>
+              <tr><td>20 or more</td><td>4%</td></tr>
+              <tr><td>30 or more</td><td>3%</td></tr>
+              <tr><td>40 or more</td><td>2% and a ₱50 bonus</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Commission also stops at ₱30 a day. A month at 4.8 stars lowers it by 1%. Senior and PWD shares carry no commission.</p>
+      </div>
+      <div class="shots">
+        <div class="phone"><img src="img/driver-board.webp" alt="Requests near you: open bookings with pickup, distance and fare." loading="lazy" width="390" height="844"></div>
+        <div class="phone"><img src="img/documents.webp" alt="Documents: license, OR/CR, franchise and clearance, each approved." loading="lazy" width="390" height="844"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== safety -->
+  <section class="band" id="safety" aria-labelledby="safe-h">
+    <div class="wrap split flip">
+      <div class="shots">
+        <div class="phone"><img src="img/driver-accepted.webp" alt="The driver's screen with the passenger's name, pickup and a call button." loading="lazy" width="390" height="844"></div>
+      </div>
+      <div>
+        <h2 id="safe-h">Know who is driving you</h2>
+        <p class="lead">Every driver is checked by the Papaya HatidGo office before their first passenger.</p>
+        <ul class="checks">
+          <li><strong>Papers checked.</strong> Driver's license, the tricycle's OR/CR, the franchise (MTOP) and a clearance, with their expiry dates.</li>
+          <li><strong>The right tricycle.</strong> You see the body number, plate and color before it arrives.</li>
+          <li><strong>Ratings that matter.</strong> Low ratings send a driver to an office review, with the reason the passenger gave.</li>
+          <li><strong>Report a problem</strong> from the ride itself; the office reviews every report.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== seniors, PWD, students -->
+  <section class="band alt" id="discounts" aria-labelledby="disc-h">
+    <div class="wrap">
+      <div class="head">
+        <h2 id="disc-h">Made for everyone in town</h2>
+        <p class="lead">Large text, simple steps, and Taglish if you prefer it.</p>
+      </div>
+      <div class="people">
+        <div>
+          <h3>Seniors and PWD</h3>
+          <p>Send a photo of your Senior Citizen or PWD ID once. After the office approves it, your share of every ride has no service fee, and the driver pays no commission on it. Show your ID to the driver at pickup.</p>
+        </div>
+        <div>
+          <h3>Students</h3>
+          <p>Send your school ID and proof of enrollment for the semester. Your share has no service fee. Riding as a group? Each rider shows their own ID to the driver.</p>
+        </div>
+        <div>
+          <h3>No phone or no load?</h3>
+          <p>A family member can book for you. At a tricycle already? Show the driver a QR code from a friend's app and ride at the same fare. The TODA terminal works as it always has.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== TODA and LGU -->
+  <section class="band" id="toda" aria-labelledby="toda-h">
+    <div class="wrap">
+      <div class="head">
+        <h2 id="toda-h">Working with the TODA and the LGU</h2>
+        <p class="lead">The app supports the terminal; it does not replace it.</p>
+      </div>
+      <div class="partner">
+        <ul class="checks">
+          <li><strong>Franchised tricycles only.</strong> A driver's MTOP and papers must be approved before they can go online.</li>
+          <li><strong>The official fare.</strong> Rates follow the municipal fare matrix, and the legal Senior, PWD and student discount can be switched on once confirmed for tricycles.</li>
+        </ul>
+        <ul class="checks">
+          <li><strong>Reports for the office.</strong> Rides, drivers, users and earnings for any period, ready to print as a formal report.</li>
+          <li><strong>Privacy first.</strong> ID photos are seen only by the office and deleted after review; phone numbers show only during a ride.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== download -->
+  <section class="band get" id="get" aria-labelledby="get-h">
+    <div class="wrap">
+      <div>
+        <h2 id="get-h">Ride or drive with Papaya HatidGo</h2>
+        <p class="lead" style="color: inherit; opacity: .95;">One app for passengers and drivers. Choose which one you are when you sign up.</p>
+        <div class="actions">
+          <a class="btn" href="https://github.com/Dosss42/papaya-hatidgo-manual/releases/latest/download/papaya-hatidgo.apk">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Download for Android
+          </a>
+          <a class="btn quiet" href="https://dosss42.github.io/papaya-hatidgo-manual/">Read the user manual</a>
+        </div>
+        <small>Android 7.0 or newer. The manual shows how to install the app file, step by step, with a QR code to scan.</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== questions -->
+  <section class="band" id="faq" aria-labelledby="faq-h">
+    <div class="wrap">
+      <div class="head"><h2 id="faq-h">Questions</h2></div>
+      <details>
+        <summary>Where does Papaya HatidGo work?</summary>
+        <p>In General Tinio (Papaya), Nueva Ecija. The app tells you if a pickup or destination is outside the service area.</p>
+      </details>
+      <details>
+        <summary>Why is there a service fee?</summary>
+        <p>It pays for the server, the maps, permits and keeping the app improved. Instead of a monthly subscription, you pay a small part only when you ride, and new passengers, discount IDs and referral points make it free.</p>
+      </details>
+      <details>
+        <summary>Can I book for someone else?</summary>
+        <p>Yes. Enter the rider's name and number so the driver knows whom to pick up. A Senior, PWD or student discount follows the person riding, not the phone.</p>
+      </details>
+      <details>
+        <summary>Is my payment safe in the app?</summary>
+        <p>In-app payments go through Xendit, a licensed payment company. Papaya HatidGo never sees your card number or your GCash PIN, and never holds your money in its own account.</p>
+      </details>
+      <details>
+        <summary>Is there an iPhone app?</summary>
+        <p>Not yet. Papaya HatidGo is for Android phones for now.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Papaya HatidGo: tricycle rides in General Tinio, Nueva Ecija. A BSIT project.</p>
+    <button type="button" class="theme" id="theme" aria-pressed="false">Dark mode</button>
+  </div>
+</footer>
+
+<script>
+  // Light / dark: follows the phone unless the visitor picks one (remembered on this device only).
+  (function () {
+    const root = document.documentElement;
+    const button = document.getElementById('theme');
+    let saved = null;
+    try { saved = localStorage.getItem('hg-theme'); } catch (e) { /* private window: just follow the phone */ }
+    if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
+    const isDark = () => root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    const label = () => {
+      button.textContent = isDark() ? 'Light mode' : 'Dark mode';
+      button.setAttribute('aria-pressed', String(isDark()));
+    };
+    label();
+    button.addEventListener('click', () => {
+      root.dataset.theme = isDark() ? 'light' : 'dark';
+      try { localStorage.setItem('hg-theme', root.dataset.theme); } catch (e) { /* not remembered */ }
+      label();
+    });
+  })();
+</script>
+</body>
+</html>
